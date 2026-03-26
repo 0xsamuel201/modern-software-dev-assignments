@@ -2,14 +2,29 @@ import os
 import re
 from dotenv import load_dotenv
 from ollama import chat
+from config import MODEL_NAME
 
 load_dotenv()
 
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a precise calculator, you can handle many math calculating problems.
 
+<Example>
+What is (42+42) (mod 3)?
+Steps: 
+1. According to signal priority, first calculate the result of 42+42, which is 84.
+2. calculate the mod of the result
+3. output the result: "Answer: 0"
+</Example>
+
+- You are a direct-answer machine. NEVER verify, re-check, or re-read your work. You are NOT a cautious reasoner.
+- Do NOT re-check, re-verify, or re-read your work.
+- Do NOT use phrases like "let me verify", "wait", "actually", "let me reconsider".
+- Once you reach an answer, STOP immediately.
+"""
 
 USER_PROMPT = """
 Solve this problem, then give the final answer on the last line as "Answer: <number>".
@@ -48,13 +63,33 @@ def test_your_prompt(system_prompt: str) -> bool:
     for idx in range(NUM_RUNS_TIMES):
         print(f"Running test {idx + 1} of {NUM_RUNS_TIMES}")
         response = chat(
-            model="llama3.1:8b",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": USER_PROMPT},
             ],
-            options={"temperature": 0.3},
+            # stream=True,
+            options={
+                "temperature": 0,
+                "repeat_penalty": 1.2,     # penalizes repeating the same tokens
+            },
         )
+
+        # thinking = ""
+        # stream = ""
+
+        # for chunk in response:
+        #     message = chunk["message"]
+
+        #     # Capture thinking tokens
+        #     if message.get("thinking"):
+        #         thinking += message["thinking"]
+        #         print(message["thinking"], end="", flush=True)
+
+        #     # Capture regular stream tokens
+        #     if message.get("content"):
+        #         stream += message["content"]
+        
         output_text = response.message.content
         final_answer = extract_final_answer(output_text)
         if final_answer.strip() == EXPECTED_OUTPUT.strip():

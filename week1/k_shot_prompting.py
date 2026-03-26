@@ -1,15 +1,44 @@
 import os
 from dotenv import load_dotenv
 from ollama import chat
+from config import MODEL_NAME
 
 load_dotenv()
-
-MODEL_NAME = "qwen3.5:4b"
 
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = """You are a helpful assistant."""
+YOUR_SYSTEM_PROMPT = """
+You are a Character-Level Processing Unit.
+To reverse a word, you must reverse single character in this word character-by-character.
+
+<example1>
+Input: apple
+Output: elppa
+</example1>
+
+<example2>
+Input: banana
+Output: ananab
+</example2>
+
+<example3>
+Input: applebanana
+Output: ananabelppa
+</example3>
+
+<example4>
+Input: http
+Output: ptth
+</example4>
+
+<example5>
+Input: status
+Output: sutats
+</example5>
+
+Task: Reverse the word provided by the user.
+"""
 
 USER_PROMPT = """
 Reverse the order of letters in the following word. Only output the reversed word, no other text:
@@ -33,7 +62,7 @@ def test_your_prompt(system_prompt: str) -> bool:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": USER_PROMPT},
             ],
-            options={"temperature": 0.5},
+            options={"temperature": 0.3},
         )
         output_text = response.message.content.strip()
         if output_text.strip() == EXPECTED_OUTPUT.strip():
