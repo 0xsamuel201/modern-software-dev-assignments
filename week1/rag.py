@@ -3,6 +3,7 @@ import re
 from typing import List, Callable
 from dotenv import load_dotenv
 from ollama import chat
+from config import MODEL_NAME
 
 load_dotenv()
 
@@ -37,7 +38,11 @@ QUESTION = (
 
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a programming expert.
+You need to write the actual function details based on the Python function introduction and the documented API.
+Please give the Python function codes without any comments.
+"""
 
 
 # For this simple example
@@ -56,6 +61,8 @@ def YOUR_CONTEXT_PROVIDER(corpus: List[str]) -> List[str]:
 
     For example, return [] to simulate missing context, or [corpus[0]] to include the API docs.
     """
+    if corpus:
+        return [corpus[0]]
     return []
 
 
@@ -97,7 +104,7 @@ def test_your_prompt(system_prompt: str, context_provider: Callable[[List[str]],
     for idx in range(NUM_RUNS_TIMES):
         print(f"Running test {idx + 1} of {NUM_RUNS_TIMES}")
         response = chat(
-            model="llama3.1:8b",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
