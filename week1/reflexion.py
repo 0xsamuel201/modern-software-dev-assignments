@@ -3,6 +3,7 @@ import re
 from typing import Callable, List, Tuple
 from dotenv import load_dotenv
 from ollama import chat
+from config import MODEL_NAME
 
 load_dotenv()
 
@@ -15,7 +16,10 @@ Keep the implementation minimal.
 """
 
 # TODO: Fill this in!
-YOUR_REFLEXION_PROMPT = ""
+YOUR_REFLEXION_PROMPT = """
+You need to review a Python function is_valid_password(password: str) -> bool codes.
+If there was failure in the code, you need to reflex it, guess the password rules, and improve your codes, to pass 100% testcases finally.
+"""
 
 
 # Ground-truth test suite used to evaluate generated code
@@ -81,7 +85,7 @@ def evaluate_function(func: Callable[[str], bool]) -> Tuple[bool, List[str]]:
 
 def generate_initial_function(system_prompt: str) -> str:
     response = chat(
-        model="llama3.1:8b",
+        model=MODEL_NAME,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": "Provide the implementation now."},
@@ -96,6 +100,13 @@ def your_build_reflexion_context(prev_code: str, failures: List[str]) -> str:
 
     Return a string that will be sent as the user content alongside the reflexion system prompt.
     """
+    if prev_code and failures:
+        failure_msg = "\n".join(failures)
+        return (
+            f"Previous code attempt:\n```python\n{prev_code}\n```\n\n"
+            f"The following requirements were MISSING or INCORRECT:\n{failure_msg}\n\n"
+            f"Please fix the code based on these failures."
+        )
     return ""
 
 
@@ -108,7 +119,7 @@ def apply_reflexion(
     reflection_context = build_context(prev_code, failures)
     print(f"REFLECTION CONTEXT: {reflection_context}, {reflexion_prompt}")
     response = chat(
-        model="llama3.1:8b",
+        model=MODEL_NAME,
         messages=[
             {"role": "system", "content": reflexion_prompt},
             {"role": "user", "content": reflection_context},
