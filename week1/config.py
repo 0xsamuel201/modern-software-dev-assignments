@@ -1,0 +1,1 @@
+MODEL_NAME = "qwen3.5:4b"
